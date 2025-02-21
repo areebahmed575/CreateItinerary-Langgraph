@@ -4,5 +4,8 @@ langchain-community
 langchain-openai
 langchain-google-genai
 serpapi
-
+fastapi
+uvicorn
+pydantic
+python-dotenv
      

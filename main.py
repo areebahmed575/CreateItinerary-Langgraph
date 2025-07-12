@@ -6,8 +6,7 @@ import uvicorn
 from langchain_core.messages import HumanMessage
 from fastapi.middleware.cors import CORSMiddleware
 from agent import graph 
-import json
-import asyncio
+
 
 class TravelPlanRequest(BaseModel):
     budget: float

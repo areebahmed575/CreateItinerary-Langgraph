@@ -29,7 +29,6 @@ llm = ChatOpenAI(model="gpt-4o-mini", api_key=open_api_key)
 
 
 class AgentState(MessagesState):
-    # pass
     # messages: Annotated[List[Union[HumanMessage, AIMessage, SystemMessage]], operator.add]
     budget: float
     interests: List[str]
@@ -37,7 +36,7 @@ class AgentState(MessagesState):
     city: List[str]
     days: int
     travel_date: str
-    itinerary: List[dict]  # To store the final itinerary
+    itinerary: List[dict]  
 
 
 
@@ -61,7 +60,7 @@ def extract_booking_url(hotel_data):
     """
     Extract actual booking URL from hotel data, avoiding SerpAPI internal URLs
     """
-    # Priority order for booking URLs
+  
     url_fields = [
         'booking_url',
         'url',
@@ -71,34 +70,34 @@ def extract_booking_url(hotel_data):
         'hotel_url'
     ]
     
-    # Check for booking URLs in different possible fields
+ 
     for field in url_fields:
         url = hotel_data.get(field)
         if url and is_valid_booking_url(url):
             return url
     
-    # Check in nested objects
+  
     if 'booking' in hotel_data and isinstance(hotel_data['booking'], dict):
         for field in url_fields:
             url = hotel_data['booking'].get(field)
             if url and is_valid_booking_url(url):
                 return url
     
-    # Check if there are offers with booking links
+  
     offers = hotel_data.get('offers', [])
     if offers and isinstance(offers, list):
-        for offer in offers[:3]:  # Check first 3 offers
+        for offer in offers[:3]: 
             for field in url_fields:
                 url = offer.get(field)
                 if url and is_valid_booking_url(url):
                     return url
     
-    # Fallback: create direct booking site URLs
+   
     hotel_name = hotel_data.get('name', '')
     location = hotel_data.get('location', '') or hotel_data.get('address', '')
     
     if hotel_name:
-        # Try to create direct booking URLs for major platforms
+   
         return create_direct_booking_url(hotel_name, location)
     
     return None
@@ -107,11 +106,11 @@ def create_direct_booking_url(hotel_name, location=""):
     """
     Create direct booking URLs prioritizing Pakistani booking platforms first
     """
-    # Clean hotel name for URL
+   
     clean_name = hotel_name.replace(' ', '+').replace('&', 'and')
     clean_location = location.replace(' ', '+').replace(',', '') if location else ""
     
-    # Priority booking platforms - Pakistani sites first
+   
     booking_platforms = [
         {
             'name': 'Sastaticket',
@@ -139,7 +138,7 @@ def create_direct_booking_url(hotel_name, location=""):
         }
     ]
     
-    # Return Pakistani booking site URL first
+   
     return booking_platforms[0]['url']
 
 def get_multiple_booking_options(hotel_name, location=""):
@@ -165,7 +164,7 @@ def is_valid_booking_url(url):
     if not url or not isinstance(url, str):
         return False
     
-    # Exclude SerpAPI internal URLs
+   
     invalid_patterns = [
         'serpapi.com',
         'search.json',
@@ -177,7 +176,7 @@ def is_valid_booking_url(url):
         if pattern in url.lower():
             return False
     
-    # Valid booking domains - Pakistani sites first
+   
     valid_domains = [
         'sastaticket.pk',
         'flypakistan.pk',
@@ -193,11 +192,11 @@ def is_valid_booking_url(url):
         'hotelscombined.com'
     ]
     
-    # Check if it's from a known booking site
+   
     if any(domain in url.lower() for domain in valid_domains):
         return True
     
-    # Check if it's a proper HTTP/HTTPS URL
+   
     if url.startswith(('http://', 'https://')) and '.' in url:
         return True
     
@@ -210,10 +209,10 @@ def process_hotel_data(hotels_list):
     processed_hotels = []
     
     for hotel in hotels_list:
-        # Extract valid booking URL
+   
         booking_url = extract_booking_url(hotel)
         
-        # Create cleaned hotel data
+   
         processed_hotel = {
             'name': hotel.get('name', 'Unknown Hotel'),
             'price': hotel.get('rate_per_night', {}).get('extracted_lowest', 0) or hotel.get('price', 0),
@@ -226,7 +225,7 @@ def process_hotel_data(hotels_list):
     
     return processed_hotels
 
-# Updated hotels_finder function
+
 @tool(args_schema=HotelsInputSchema)
 def hotels_finder(params: HotelsInput):
     '''
@@ -253,18 +252,17 @@ def hotels_finder(params: HotelsInput):
     search = serpapi.search(search_params)
     results = search.data
     
-    # Get hotel properties
+
     raw_hotels = results.get('properties', [])[:5]
     
-    # Process hotels to get valid booking URLs
+
     processed_hotels = process_hotel_data(raw_hotels)
     
     print(f"Processed {len(processed_hotels)} hotels with valid booking URLs")
     
     return processed_hotels
 
-# Alternative: If you want to keep your current function structure, 
-# just add this processing in your system prompt or assistant function
+
 def clean_hotel_booking_urls(hotel_data_list):
     """
     Clean up hotel data to remove invalid booking URLs and replace with direct booking URLs
@@ -279,7 +277,7 @@ def clean_hotel_booking_urls(hotel_data_list):
     
     return hotel_data_list
 
-# Enhanced version: Provide multiple booking options
+
 def enhance_hotel_with_booking_options(hotel_data):
     """
     Add multiple booking platform URLs to hotel data
@@ -289,10 +287,10 @@ def enhance_hotel_with_booking_options(hotel_data):
     
     booking_options = get_multiple_booking_options(hotel_name, location)
     
-    # Add primary booking URL
+ 
     hotel_data['booking_url'] = booking_options['booking_com']
     
-    # Add alternative booking URLs
+ 
     hotel_data['booking_alternatives'] = {
         'agoda': booking_options['agoda'],
         'hotels_com': booking_options['hotels_com'],
@@ -326,23 +324,23 @@ def is_problematic_url(url):
         return True
     
     problematic_patterns = [
-        # Google Photos/Drive URLs that often don't work
+ 
         r'lh\d+\.googleusercontent\.com/p/',
         r'drive\.google\.com',
         r'photos\.google\.com',
         
-        # Other commonly problematic domains
-        r'\.trvl-media\.com',  # Travel booking sites
+ 
+        r'\.trvl-media\.com', 
         r'booking\.com.*images',
         r'expedia\.com.*images',
         
-        # URLs with suspicious parameters that often expire
+ 
         r'.*[?&](token|auth|signature|expires)=',
         
-        # Very long Google URLs that are often temporary
+ 
         r'lh\d+\.googleusercontent\.com.*=s\d+$',
         
-        # URLs ending with tracking or session parameters
+        
         r'.*[?&](utm_|fbclid|gclid)',
     ]
     
@@ -358,7 +356,7 @@ def filter_reliable_images(image_results, max_images=10):
     """
     reliable_images = []
     
-    # Preferred domains (more reliable)
+  
     preferred_domains = [
         'upload.wikimedia.org',
         'commons.wikimedia.org',
@@ -369,7 +367,7 @@ def filter_reliable_images(image_results, max_images=10):
         'staticflickr.com'
     ]
     
-    # First pass: Get images from preferred domains
+  
     for img in image_results:
         if len(reliable_images) >= max_images:
             break
@@ -385,12 +383,12 @@ def filter_reliable_images(image_results, max_images=10):
             if url and not is_problematic_url(url):
                 domain = urlparse(url).netloc.lower()
                 
-                # Prioritize preferred domains
+             
                 if any(pref_domain in domain for pref_domain in preferred_domains):
                     reliable_images.append({"url": url})
                     break
     
-    # Second pass: Get other non-problematic URLs if we need more
+   
     if len(reliable_images) < max_images:
         for img in image_results:
             if len(reliable_images) >= max_images:
@@ -405,14 +403,14 @@ def filter_reliable_images(image_results, max_images=10):
             
             for url in url_candidates:
                 if url and not is_problematic_url(url):
-                    # Skip if already added
+                  
                     if not any(existing['url'] == url for existing in reliable_images):
                         reliable_images.append({"url": url})
                         break
     
     return reliable_images
 
-# Updated image_finder function
+
 @tool
 def image_finder(q: str, safe: str = "active") -> list:
     '''
@@ -430,24 +428,24 @@ def image_finder(q: str, safe: str = "active") -> list:
         "safe": safe,
         "hl": "en",
         "gl": "pk",
-        "tbm": "isch",  # Ensure we're searching images
-        "num": "20"     # Get more results to filter from
+        "tbm": "isch",  
+        "num": "20"    
     }
 
     search = serpapi.search(search_params)
     results = search.data
     
-    # Get raw image results
+   
     raw_images = results.get("images_results", [])
     
-    # Filter to get reliable image URLs
+   
     reliable_images = filter_reliable_images(raw_images, max_images=10)
     
-    # If we don't have enough reliable images, try different search terms
+   
     if len(reliable_images) < 5:
         print(f"Only found {len(reliable_images)} reliable images for '{q}', trying broader search...")
         
-        # Try searching with "wallpaper" or "photos" to get better quality images
+      
         alt_queries = [f"{q} wallpaper", f"{q} landscape photos", f"{q} tourism photos"]
         
         for alt_q in alt_queries:
@@ -466,7 +464,7 @@ def image_finder(q: str, safe: str = "active") -> list:
                 max_images=10-len(reliable_images)
             )
             
-            # Avoid duplicates
+          
             for new_img in additional_reliable:
                 if not any(existing['url'] == new_img['url'] for existing in reliable_images):
                     reliable_images.append(new_img)
@@ -484,7 +482,7 @@ def image_finder(q: str, safe: str = "active") -> list:
      
 
 
-# LangChain Setup
+
 def get_system_prompt(state: AgentState):
     return f"""You are a smart travel assistant. Create a detailed itinerary in JSON format considering:
     - Budget: PKR {state['budget']}
@@ -601,7 +599,7 @@ builder: StateGraph = StateGraph(AgentState)
 builder.add_node("assistant", assistant)
 builder.add_node("tools", ToolNode(tools))
 
-# Define edges: these determine how the control flow moves
+
 builder.add_edge(START, "assistant")
 builder.add_conditional_edges(
     "assistant",

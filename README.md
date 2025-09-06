@@ -1,6 +1,6 @@
 # Create Itinerary Agent 🌍
 
-An intelligent travel planning agent that creates detailed itineraries with hotels, images, and activities for Pakistan destinations using AI and real-time data.
+An intelligent travel planning agent that creates detailed itineraries with hotels, images, and activities for Pakistan destinations using Agentic AI and real-time data.
 
 ## Features ✨
 
